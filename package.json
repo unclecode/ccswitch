@@ -1,5 +1,5 @@
 {
-  "name": "ccswitch",
+  "name": "@unclecode/ccswitch",
   "version": "0.1.1",
   "description": "Switch Claude Code between your Max subscription and any Anthropic-compatible provider (OpenRouter, Groq), per project, mid-session, both directions, without breaking your session.",
   "author": "unclecode (https://github.com/unclecode)",
@@ -45,5 +45,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
