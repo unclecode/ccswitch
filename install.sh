@@ -83,10 +83,12 @@ say ""
 
 # ---- 3. setup ---------------------------------------------------------------
 # `ccswitch install` asks its own questions; give it the terminal.
+# Run through $BUN explicitly: the shebang needs bun on PATH, which a shell
+# that just installed Bun does not have yet.
 if { true < /dev/tty; } 2>/dev/null; then
-  "$CCSWITCH" install < /dev/tty
+  "$BUN" "$CCSWITCH" install < /dev/tty
 else
-  "$CCSWITCH" install
+  "$BUN" "$CCSWITCH" install
 fi
 say ""
 
