@@ -24,7 +24,8 @@ import {
 import { findTranscript, fixTranscript } from "./fix";
 import { PROVIDERS, getProvider, parseModelRef } from "./providers";
 import { proxyHealthy, proxyInfo } from "./proxy";
-import { installSlashCommand, slashCommandPath } from "./install";
+import { hookInstalled, installHook, installSlashCommand, slashCommandPath, uninstallHook } from "./install";
+import { heal } from "./heal";
 
 const VERSION = "0.1.0";
 const LOG_PATH = join(homedir(), ".ccswitch.log");
@@ -368,8 +369,51 @@ async function cmdInstall(state: State): Promise<void> {
   }
   console.log();
 
+  // 3. Self-healing hook — default yes
+  if (hookInstalled()) {
+    console.log(`  ${c.green("✓")} auto-restart hook already installed`);
+  } else if (
+    await confirm("Auto-restart the proxy when a session opens? (recommended)", true)
+  ) {
+    installHook();
+    console.log(`  ${c.green("✓")} SessionStart hook added to ~/.claude/settings.json`);
+    console.log(`  ${c.dim("keeps switched projects working after a reboot, with nothing to run")}`);
+  } else {
+    console.log(c.dim("  skipped — after a reboot, run `ccswitch heal` in a switched project"));
+  }
+  console.log();
+
   console.log(`${c.bold("Ready.")} Try: ${c.cyan("ccswitch")} ${c.dim("(picker)")} or ${c.cyan("ccswitch status")}`);
   saveState(state);
+}
+
+async function cmdHeal(quiet: boolean): Promise<void> {
+  const result = await heal();
+
+  if (quiet) {
+    // Runs from the SessionStart hook: silent unless it actually did something,
+    // and never non-zero, so a problem here can never block a session starting.
+    if (result.action === "healed") {
+      console.log(
+        `ccswitch: restarted the ${result.model} proxy on port ${result.port}` +
+          (result.changedPort ? " (port changed; project settings updated)" : ""),
+      );
+    }
+    return;
+  }
+
+  switch (result.action) {
+    case "not-needed":
+      console.log(`${c.green("ok")} ${c.dim(result.reason)}`);
+      break;
+    case "healed":
+      console.log(`${c.green("healed")} proxy for ${c.bold(result.model)} on port ${result.port}`);
+      if (result.changedPort) console.log(c.dim("  port was taken; project settings updated"));
+      break;
+    case "failed":
+      console.log(`${c.red("failed")} ${result.reason}`);
+      break;
+  }
 }
 
 function usage(): void {
@@ -385,8 +429,10 @@ ${c.bold("USAGE")}
   ccswitch remove <model>        remove a favorite
   ccswitch fix [session-id]      repair a transcript poisoned before ccswitch
   ccswitch providers             supported providers and key status
-  ccswitch install                first-run setup (keys check + /switch command)
+  ccswitch install                first-run setup (keys, /switch command, auto-restart)
   ccswitch install-command       add the /switch slash command only
+  ccswitch heal                  restart this project's proxy if it stopped
+  ccswitch uninstall-hook        remove the auto-restart hook
 
 ${c.bold("MODELS")}
   Prefix with a provider, or omit it to use the last one:
@@ -440,9 +486,15 @@ async function main(): Promise<void> {
     case "providers":
       cmdProviders();
       break;
+    case "heal":
+      await cmdHeal(flags.has("--quiet"));
+      break;
     case "install":
     case "setup":
       await cmdInstall(state);
+      break;
+    case "uninstall-hook":
+      console.log(uninstallHook() ? c.green("hook removed") : c.dim("hook was not installed"));
       break;
     case "install-command":
       installSlashCommand();

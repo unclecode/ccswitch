@@ -11,7 +11,7 @@ A CLI that switches a single project between the user's Claude subscription and 
 
 ```bash
 bun install -g ccswitch    # requires Bun: curl -fsSL https://bun.sh/install | bash
-ccswitch install           # checks keys, offers the /switch slash command
+ccswitch install           # keys check, /switch command, auto-restart hook
 ```
 
 Then make sure a provider key is exported in the user's shell profile, so Claude Code inherits it:
@@ -32,7 +32,11 @@ ccswitch back --clean                          # also remove the empty override 
 ccswitch status                                # what this project is using
 ccswitch list / add / remove                   # manage favorite models
 ccswitch fix [session-id] [--dry-run]          # repair an already-poisoned transcript
+ccswitch heal                                  # restart this project's proxy if it stopped
 ```
+
+Day to day the user should only need `/switch` inside Claude Code. The proxy starts on
+demand and a SessionStart hook restarts it after a reboot, so there is no service to run.
 
 **After switching to another provider, always tell the user to run `/model` and select that
 model.** Otherwise the session keeps using its previous model at the new provider's price —
@@ -63,8 +67,10 @@ If the user reports that 400 error, `ccswitch fix` on that session id is the rem
 
 - **`<PROVIDER>_API_KEY is not set`** — the key must be exported in the shell that launched
   Claude Code, not only in the current one.
-- **`proxy unavailable` warning** — Bun is missing or the port is taken. Check `~/.ccswitch.log`.
-  Switching still works, but switching back will then need `ccswitch fix`.
+- **`proxy unavailable` warning** — Bun is missing or every port in range is taken. Check
+  `~/.ccswitch.log`. Switching still works, but switching back will then need `ccswitch fix`.
+- **Connection refused in a switched project** — the proxy is not running (e.g. after a
+  reboot without the hook installed). Run `ccswitch heal`.
 - **Model not found upstream** — verify the exact model id on the provider's models page; ids
   must match exactly (e.g. `z-ai/glm-5.3-flash`).
 - **Tool calls misbehaving on a cheap model** — not all models handle Claude Code's tool

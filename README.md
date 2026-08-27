@@ -39,7 +39,9 @@ bun install -g ccswitch
 ccswitch install
 ```
 
-`ccswitch install` checks your provider keys and offers to add the `/switch` slash command (default yes).
+`ccswitch install` checks your provider keys, adds the `/switch` slash command, and enables auto-restart (both default yes).
+
+That is the whole setup. After it, you never run ccswitch again in normal use — open Claude Code in any directory and type `/switch`.
 
 Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`).
 
@@ -66,15 +68,32 @@ Put it in your shell profile so Claude Code inherits it.
 
 ## Use
 
+**Day to day, you only need the slash command:**
+
+```
+/switch          → pick a model
+/model           → select it
+   ...work...
+/switch → back   → subscription, keep typing
+```
+
+`/switch` is global: it works in any directory, and changes only that directory.
+
+The proxy starts itself when needed and restarts itself after a reboot. There is no
+service to run or supervise.
+
+<details>
+<summary>The CLI, for setup and scripting</summary>
+
 ```bash
 ccswitch                              # interactive picker
 ccswitch use z-ai/glm-5.3-flash       # switch this project to a model
 ccswitch use groq:moonshotai/kimi-k2-instruct
 ccswitch back                         # back to your Claude subscription
 ccswitch status                       # what is this project using?
+ccswitch heal                         # restart this project's proxy if it stopped
 ```
-
-Inside Claude Code, `/switch` does the same thing without leaving the session.
+</details>
 
 After switching, run `/model` and pick the model you switched to — otherwise the session keeps using its previous model at the new provider's prices.
 
@@ -114,6 +133,7 @@ Claude Code  ──►  127.0.0.1:8787  ──►  OpenRouter / Groq
 - **Per project.** Only `<project>/.claude/settings.local.json` is touched. Your other projects and sessions stay on the subscription.
 - **Both directions, live.** Claude Code re-reads settings mid-session, so switching applies to your very next message.
 - **The proxy is local.** Binds to `127.0.0.1` only. Your API key passes through in the header exactly as sent — never logged, stored, or inspected.
+- **Self-healing.** A project pins an exact proxy port, which is empty after a reboot. A `SessionStart` hook runs `ccswitch heal`, which restarts the proxy (or repoints the project if the port was taken) before you notice. It is a silent no-op for projects on the subscription. Remove it with `ccswitch uninstall-hook`.
 - **Never silently degraded.** If Bun or the proxy is unavailable, ccswitch says so and warns that switching back will need `ccswitch fix`.
 - **`ANTHROPIC_API_KEY` is blanked** while on another provider, so a stray key in your environment can't cause surprise Anthropic API billing.
 - **Every settings change is backed up** to `~/.ccswitch-backups/<project>/`.
@@ -152,6 +172,7 @@ PRs welcome.
 | `~/.ccswitch-backups/` | timestamped settings backups |
 | `~/.ccswitch.log` | proxy log |
 | `~/.claude/commands/switch.md` | the `/switch` command (opt-in) |
+| `~/.claude/settings.json` | one `SessionStart` hook (opt-in, backed up first) |
 
 Nothing else. Your Claude credentials are never read or modified.
 
@@ -161,7 +182,7 @@ Nothing else. Your Claude credentials are never read or modified.
 
 ```bash
 bun install
-bun test          # 68 tests
+bun test          # 86 tests
 bun run typecheck
 bun src/cli.ts    # run locally
 ```
