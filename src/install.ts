@@ -65,7 +65,16 @@ export function installSlashCommand(): string {
  * It is a no-op for projects on the Claude subscription, exits non-blocking, and
  * never prints on the happy path.
  */
-export const HOOK_COMMAND = "ccswitch heal --quiet";
+/**
+ * Full paths, not bare names: Claude Code may run hooks with a PATH that lacks
+ * Bun's bin folder, and ccswitch's own shebang line needs `bun` on PATH too.
+ * With both paths written out, the hook works in any environment.
+ */
+export function hookCommand(): string {
+  const bun = process.execPath;
+  const cli = join(dirname(new URL(import.meta.url).pathname), "cli.ts");
+  return `"${bun}" "${cli}" heal --quiet`;
+}
 
 export function settingsJsonPath(): string {
   return join(homedir(), ".claude", "settings.json");
@@ -85,7 +94,7 @@ export function hookInstalled(settings: any = readSettings(settingsJsonPath())):
   const entries = settings?.hooks?.SessionStart;
   if (!Array.isArray(entries)) return false;
   return entries.some((entry: any) =>
-    (entry?.hooks ?? []).some((h: any) => typeof h?.command === "string" && h.command.includes("ccswitch heal")),
+    (entry?.hooks ?? []).some((h: any) => typeof h?.command === "string" && h.command.includes("heal --quiet")),
   );
 }
 
@@ -101,7 +110,7 @@ export function installHook(): boolean {
   settings.hooks ??= {};
   settings.hooks.SessionStart ??= [];
   settings.hooks.SessionStart.push({
-    hooks: [{ type: "command", command: HOOK_COMMAND }],
+    hooks: [{ type: "command", command: hookCommand() }],
   });
 
   mkdirSync(dirname(path), { recursive: true });
@@ -125,7 +134,7 @@ export function uninstallHook(): boolean {
     .map((entry: any) => ({
       ...entry,
       hooks: (entry.hooks ?? []).filter(
-        (h: any) => !(typeof h?.command === "string" && h.command.includes("ccswitch heal")),
+        (h: any) => !(typeof h?.command === "string" && h.command.includes("heal --quiet")),
       ),
     }))
     .filter((entry: any) => (entry.hooks ?? []).length > 0);

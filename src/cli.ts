@@ -27,7 +27,7 @@ import { proxyHealthy, proxyInfo } from "./proxy";
 import { hookInstalled, installHook, installSlashCommand, slashCommandPath, uninstallHook } from "./install";
 import { heal } from "./heal";
 
-const VERSION = "0.1.1";
+const VERSION = "0.1.2";
 const LOG_PATH = join(homedir(), ".ccswitch.log");
 
 // ── tiny terminal helpers ────────────────────────────────────────────────────

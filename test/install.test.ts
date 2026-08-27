@@ -18,7 +18,7 @@ function hasHook(settings: any): boolean {
   if (!Array.isArray(entries)) return false;
   return entries.some((e: any) =>
     (e?.hooks ?? []).some(
-      (h: any) => typeof h?.command === "string" && h.command.includes("ccswitch heal"),
+      (h: any) => typeof h?.command === "string" && h.command.includes("heal --quiet"),
     ),
   );
 }
@@ -30,7 +30,7 @@ function removeHook(settings: any): any {
     .map((e: any) => ({
       ...e,
       hooks: (e.hooks ?? []).filter(
-        (h: any) => !(typeof h?.command === "string" && h.command.includes("ccswitch heal")),
+        (h: any) => !(typeof h?.command === "string" && h.command.includes("heal --quiet")),
       ),
     }))
     .filter((e: any) => (e.hooks ?? []).length > 0);
