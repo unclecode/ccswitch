@@ -1,0 +1,24 @@
+{
+  "name": "ccswitch",
+  "version": "0.1.0",
+  "description": "Switch Claude Code between your Max subscription and any Anthropic-compatible provider (OpenRouter, Groq) — per project, mid-session, both directions, without breaking your session.",
+  "author": "unclecode (https://github.com/unclecode)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": { "ccswitch": "./src/cli.ts" },
+  "files": ["src", "skill", "README.md", "LICENSE"],
+  "keywords": [
+    "claude-code", "claude", "anthropic", "openrouter", "groq",
+    "llm", "proxy", "cli", "ai", "developer-tools"
+  ],
+  "repository": { "type": "git", "url": "git+https://github.com/unclecode/ccswitch.git" },
+  "homepage": "https://github.com/unclecode/ccswitch#readme",
+  "bugs": { "url": "https://github.com/unclecode/ccswitch/issues" },
+  "engines": { "bun": ">=1.0.0" },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "start": "bun src/cli.ts"
+  },
+  "devDependencies": { "@types/bun": "latest", "typescript": "^5.6.0" }
+}
