@@ -79,6 +79,12 @@ The picker remembers the last model you used.
 
 ---
 
+### Two useful notes
+
+**Context window.** Claude Code does not know the real context size of a third party model. It shows the default, 200k. If your `/model` list has an entry ending in `[1m]`, pick that one: Claude Code then uses a 1M window for `/context` and compaction. The request itself always goes to the same model either way.
+
+**No restart needed, with one exception.** The auto-restart hook prepares every directory the first time you start Claude Code in it. In a directory where Claude Code never ran with ccswitch installed, the first `/switch` needs one session restart. After that, never again.
+
 ## Learn more
 
 | | |

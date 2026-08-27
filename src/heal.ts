@@ -11,15 +11,31 @@
  */
 
 import { spawn } from "node:child_process";
-import { openSync } from "node:fs";
+import { existsSync, mkdirSync, openSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
-import { applyProvider, loadState, projectRoot, readStatus } from "./config";
+import { dirname, join } from "node:path";
+import { applyProvider, loadState, projectRoot, readStatus, settingsPath } from "./config";
 import { getProvider, PROVIDERS } from "./providers";
 import { proxyHealthy, proxyInfo } from "./proxy";
 
 const LOG_PATH = join(homedir(), ".ccswitch.log");
 const PORT_SCAN_RANGE = 20;
+
+/**
+ * Make sure `.claude/settings.local.json` exists, even if only as `{}`.
+ *
+ * Claude Code registers its setting sources once, at session start. A file
+ * created later is never noticed, so the FIRST switch in a fresh directory used
+ * to need a session restart. An empty file present at start registers as a
+ * source, and values written into it later are applied live. This hook runs at
+ * SessionStart, so seeding here removes the restart.
+ */
+function seedSettingsFile(root: string): void {
+  const path = settingsPath(root);
+  if (existsSync(path)) return;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, "{}\n");
+}
 
 export type HealResult =
   | { action: "not-needed"; reason: string }
@@ -39,7 +55,9 @@ async function portFree(port: number): Promise<boolean> {
 
 /** Launch a detached proxy and wait for it to answer. */
 async function spawnProxy(port: number, upstream: string): Promise<boolean> {
-  const entry = Bun.fileURLToPath(import.meta.resolve("./proxy-server.ts"));
+  // `import.meta.resolve` returns an object, not a string, on Bun below 1.1,
+  // so build the path from the module directory instead.
+  const entry = join(import.meta.dir, "proxy-server.ts");
   const fd = openSync(LOG_PATH, "a");
   const child = spawn(
     process.execPath,
@@ -71,6 +89,7 @@ function providerForToken(token: string): string | null {
  * Safe to call on every session start: it is a no-op unless there is a problem.
  */
 export async function heal(root: string = projectRoot()): Promise<HealResult> {
+  seedSettingsFile(root);
   const status = readStatus(root);
 
   if (status.mode !== "third-party") {

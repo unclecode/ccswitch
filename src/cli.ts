@@ -7,7 +7,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { openSync } from "node:fs";
+import { existsSync, openSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
@@ -27,7 +27,7 @@ import { proxyHealthy, proxyInfo } from "./proxy";
 import { hookInstalled, installHook, installSlashCommand, slashCommandPath, uninstallHook } from "./install";
 import { heal } from "./heal";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 const LOG_PATH = join(homedir(), ".ccswitch.log");
 
 // ── tiny terminal helpers ────────────────────────────────────────────────────
@@ -87,7 +87,9 @@ async function ensureProxy(
 
     if (!(await portFree(port))) continue; // someone else holds it
 
-    const entry = Bun.fileURLToPath(import.meta.resolve("./proxy-server.ts"));
+    // `import.meta.resolve` returns an object, not a string, on Bun below 1.1,
+  // so build the path from the module directory instead.
+  const entry = join(import.meta.dir, "proxy-server.ts");
     const fd = openSync(LOG_PATH, "a");
     const child = spawn(
       process.execPath,
@@ -144,13 +146,17 @@ async function cmdUse(ref: string | undefined, state: State): Promise<void> {
   const baseUrl = viaProxy ? `http://127.0.0.1:${proxyPort}` : p.baseUrl;
   if (viaProxy && proxyPort !== state.port) state.port = proxyPort;
 
+  // Note whether this switch creates the project folder, so the user is told.
+  const root = projectRoot();
+  const isNewProject = !existsSync(join(root, ".claude"));
+
   const { backup } = applyProvider({ baseUrl, token, model });
 
   state.last = { provider, model };
   saveState(state);
 
   console.log(`${c.green("→")} ${c.bold(model)} ${c.dim(`(${p.label})`)}`);
-  console.log(`  ${c.dim("project:")} ${projectRoot()}`);
+  console.log(`  ${c.dim("project:")} ${root}${isNewProject ? c.dim("  (created .claude here)") : ""}`);
   if (viaProxy) {
     console.log(`  ${c.dim("route:  ")} ${baseUrl} ${c.green("· id-rewriting proxy on")}`);
   } else {

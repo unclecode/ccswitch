@@ -215,10 +215,38 @@ describe("readStatus", () => {
 });
 
 describe("projectRoot", () => {
-  test("finds the nearest ancestor holding .claude", () => {
-    const root = project();
-    const nested = join(root, "a", "b");
-    mkdirSync(nested, { recursive: true });
-    expect(projectRoot(nested)).toBe(root);
+  test("uses the current directory, even with no .claude in it", () => {
+    // The switch must land where the user is standing, and create .claude there.
+    const dir = mkdtempSync(join(tmpdir(), "ccswitch-plain-"));
+    dirs.push(dir);
+    expect(projectRoot(dir)).toBe(dir);
+  });
+
+  test("never walks up to a parent that has .claude", () => {
+    // Regression: a new folder inside ~/devs/tmp used to switch ~/devs/tmp itself,
+    // and with it every other project under that folder.
+    const parent = project();                    // parent HAS .claude
+    const child = join(parent, "new-folder");
+    mkdirSync(child, { recursive: true });
+
+    expect(projectRoot(child)).toBe(child);
+  });
+
+  test("uses the current directory even inside a git repository", () => {
+    const repo = project();
+    mkdirSync(join(repo, ".git"), { recursive: true });
+    const sub = join(repo, "packages", "app");
+    mkdirSync(sub, { recursive: true });
+
+    expect(projectRoot(sub)).toBe(sub);
+  });
+
+  test("a switch creates .claude where the user stands", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ccswitch-fresh-"));
+    dirs.push(dir);
+
+    applyProvider({ baseUrl: "http://127.0.0.1:8787", token: "t", model: "m", root: dir });
+
+    expect(readJson(settingsPath(dir)).env.ANTHROPIC_MODEL).toBe("m");
   });
 });

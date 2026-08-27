@@ -66,15 +66,16 @@ export function saveState(state: State): void {
   writeAtomic(STATE_PATH, JSON.stringify(state, null, 2) + "\n");
 }
 
-/** Nearest ancestor containing `.claude`, else the cwd. */
+/**
+ * The directory a switch applies to: always the current one.
+ *
+ * Claude Code reads `.claude/settings.local.json` from the directory it was
+ * started in, so ccswitch writes exactly there and creates the folder if it is
+ * missing. It never looks at a parent folder: doing so would switch a directory
+ * the user did not name, and every other project under it.
+ */
 export function projectRoot(from: string = process.cwd()): string {
-  let dir = resolve(from);
-  while (true) {
-    if (existsSync(join(dir, ".claude"))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) return resolve(from);
-    dir = parent;
-  }
+  return resolve(from);
 }
 
 export function settingsPath(root: string = projectRoot()): string {
