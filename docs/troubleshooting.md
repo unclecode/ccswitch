@@ -66,7 +66,7 @@ model, not of ccswitch. Try a known good one, for example `z-ai/glm-5.3-flash` o
 ccswitch back --clean      # in each switched project, when no session is running there
 ccswitch uninstall-hook    # remove the SessionStart hook
 rm ~/.claude/commands/switch.md
-bun remove -g ccswitch
+bun remove -g @unclecode/ccswitch
 ```
 
 Backups of every settings change stay in `~/.ccswitch-backups/`.

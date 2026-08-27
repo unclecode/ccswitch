@@ -10,7 +10,7 @@ A CLI that switches a single project between the user's Claude subscription and 
 ## Install it
 
 ```bash
-bun install -g ccswitch    # requires Bun: curl -fsSL https://bun.sh/install | bash
+bun install -g @unclecode/ccswitch    # requires Bun: curl -fsSL https://bun.sh/install | bash
 ccswitch install           # keys check, /switch command, auto-restart hook
 ```
 

@@ -30,8 +30,16 @@ Unclecode
 
 ## Install
 
+One line. It asks before each step and installs Bun if you do not have it:
+
 ```bash
-bun install -g ccswitch
+curl -fsSL https://raw.githubusercontent.com/unclecode/ccswitch/main/install.sh | bash
+```
+
+Or, if you already have [Bun](https://bun.sh):
+
+```bash
+bun install -g @unclecode/ccswitch
 ccswitch install
 ```
 
