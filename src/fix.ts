@@ -2,7 +2,7 @@
  * Repair a Claude Code transcript that already contains foreign response ids.
  *
  * The proxy prevents this from happening. This is the rescue path for sessions
- * that were poisoned before ccswitch was in place — or by any other tool that
+ * that were poisoned before ccswitch was in place, or by any other tool that
  * pointed Claude Code at a third-party endpoint directly.
  */
 

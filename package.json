@@ -1,7 +1,7 @@
 {
   "name": "ccswitch",
   "version": "0.1.0",
-  "description": "Switch Claude Code between your Max subscription and any Anthropic-compatible provider (OpenRouter, Groq) — per project, mid-session, both directions, without breaking your session.",
+  "description": "Switch Claude Code between your Max subscription and any Anthropic-compatible provider (OpenRouter, Groq), per project, mid-session, both directions, without breaking your session.",
   "author": "unclecode (https://github.com/unclecode)",
   "license": "Apache-2.0",
   "type": "module",

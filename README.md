@@ -1,34 +1,30 @@
 # ccswitch
 
-**Use Claude Code with your Max subscription *and* any OpenRouter or Groq model — switching per project, mid-session, in both directions, without breaking your session.**
+**Switch Claude Code between your Max subscription and OpenRouter or Groq models, inside the same chat session, and switch back without breaking anything.**
 
-```bash
-ccswitch use z-ai/glm-5.3-flash   # cheap model for the grind
-ccswitch back                     # back to your subscription, keep typing
 ```
-
-No restart. No lost context. No wedged sessions.
+/switch          pick a model
+   ...work...
+/switch          back to your subscription, keep typing
+```
 
 ---
 
-## The problem this solves
+## Why I built this
 
-Claude Code lets you point it at any Anthropic-compatible endpoint with `ANTHROPIC_BASE_URL`, so running it on OpenRouter or Groq models looks easy. It is — until you switch back.
+Today, 27 August, I woke up, had breakfast, and sat down to work with Claude Code as usual. Everyone right now is talking about GLM, DeepSeek, OpenRouter. So I decided to dig in again and find out whether there was a smooth way to do the thing I actually wanted: while running Claude Code, inside the same chat session, switch over to OpenRouter, pick another model, and then come back and be on my Max subscription again.
 
-Then every message fails, permanently:
+I did a lot of research. I found some solutions, but none of them really did the job the way I wanted. Either no proxy at all, or too much proxy, or a whole LiteLLM setup, this and that.
 
-```
-API Error: 400 diagnostics.previous_message_id: must be the `id` from a prior
-/v1/messages response (starts with `msg_`)
-```
+And then I hit the real problem. I could switch to OpenRouter dynamically inside the session, that part worked. But when I wanted to go back, it broke. It turns out that although OpenRouter claims their endpoint is Anthropic friendly, it is not, quite. They hand back their own message IDs. Claude Code writes those IDs into your session file, and the moment you switch back to your subscription, the Anthropic API rejects them. Your session is stuck. You have to exit, repair the session file, and come back.
 
-Exiting doesn't help. Resuming doesn't help. The session is dead.
+So I wrote a very thin proxy to fix exactly that, and after that it just worked. It is so smooth that I cannot stop myself from sharing it with everyone who has the same wish.
 
-**Why:** Claude Code uses Anthropic's cache-diagnosis beta, sending the previous response's `id` on every request. Anthropic requires `msg_...`; OpenRouter returns `gen-...`. Claude Code writes whatever it receives into the session transcript, so once you switch back, it keeps replaying a foreign id that the API rejects — and it re-reads that id from disk on every resume.
+Now, in the middle of a chat, I can switch wherever I want. Do the planning with a Claude model, hand the grinding work to sub agents on DeepSeek or GLM or Kimi, then come straight back. Some tasks want a cheaper model but still want the harness of Claude Code. This gives you that.
 
-This is a known issue, [closed upstream as "not planned"](https://github.com/anthropics/claude-code/issues/59520), with "exit and lose your session" as the only documented answer.
+It is very simple. Install it, then there is a `/switch` command. Run it, switch back and forth, that is it. I added OpenRouter and Groq to start with, and adding a new provider is easy, so contributions are welcome.
 
-**The fix:** ccswitch runs a tiny local proxy that normalises response ids before they ever reach your transcript. Nothing invalid gets persisted, so there is nothing to break.
+Unclecode
 
 ---
 
@@ -39,63 +35,37 @@ bun install -g ccswitch
 ccswitch install
 ```
 
-`ccswitch install` checks your provider keys, adds the `/switch` slash command, and enables auto-restart (both default yes).
-
-That is the whole setup. After it, you never run ccswitch again in normal use — open Claude Code in any directory and type `/switch`.
-
-Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`).
-
-<details>
-<summary>Or point your coding agent at it</summary>
-
-Paste this to Claude Code, Cursor, or any coding agent:
-
-> Install ccswitch from https://github.com/unclecode/ccswitch, run `ccswitch install`, and set up an OpenRouter key for me.
-
-The repo ships an agent skill in [`skill/`](skill/) that agents can follow directly.
-</details>
-
-### Get a provider key
+Then put your provider key in your shell profile so Claude Code inherits it:
 
 ```bash
 export OPENROUTER_API_KEY=...   # https://openrouter.ai/keys
 export GROQ_API_KEY=...         # https://console.groq.com/keys
 ```
 
-Put it in your shell profile so Claude Code inherits it.
+That is the whole setup. Requires [Bun](https://bun.sh).
 
----
+<details>
+<summary>Or just ask your coding agent to do it</summary>
+
+> Install ccswitch from https://github.com/unclecode/ccswitch, run `ccswitch install`, and set up an OpenRouter key for me.
+
+The repo ships an agent skill in [`skill/`](skill/) that agents follow directly.
+</details>
 
 ## Use
 
-**Day to day, you only need the slash command:**
+Inside any Claude Code session, in any directory:
 
 ```
-/switch          → pick a model
-/model           → select it
+/switch          pick a model from your favorites
+/model           select that model
    ...work...
-/switch → back   → subscription, keep typing
+/switch          choose "back", keep typing on your subscription
 ```
 
-`/switch` is global: it works in any directory, and changes only that directory.
+That is it. Nothing runs in the background that you have to manage. The proxy starts when it is needed and restarts itself after a reboot.
 
-The proxy starts itself when needed and restarts itself after a reboot. There is no
-service to run or supervise.
-
-<details>
-<summary>The CLI, for setup and scripting</summary>
-
-```bash
-ccswitch                              # interactive picker
-ccswitch use z-ai/glm-5.3-flash       # switch this project to a model
-ccswitch use groq:moonshotai/kimi-k2-instruct
-ccswitch back                         # back to your Claude subscription
-ccswitch status                       # what is this project using?
-ccswitch heal                         # restart this project's proxy if it stopped
-```
-</details>
-
-After switching, run `/model` and pick the model you switched to — otherwise the session keeps using its previous model at the new provider's prices.
+Switching changes only the directory you are in. Every other project and session stays on your subscription.
 
 ### Favorites
 
@@ -105,87 +75,18 @@ ccswitch add groq:llama-3.3-70b-versatile "fast and cheap for refactors"
 ccswitch remove llama-3.3-70b-versatile
 ```
 
-The picker shows your favorites with the last-used one marked.
-
-### Repairing an already-broken session
-
-If a session was wedged *before* you had ccswitch (or by another tool):
-
-```bash
-ccswitch fix                    # newest transcript in this project
-ccswitch fix <session-id>       # a specific one
-ccswitch fix <session-id> --dry-run
-```
-
-It rewrites the foreign ids, backs up first, and the session resumes normally with its context intact.
+The picker remembers the last model you used.
 
 ---
 
-## How it works
+## Learn more
 
-```
-Claude Code  ──►  127.0.0.1:8787  ──►  OpenRouter / Groq
-                  (ccswitch proxy)
-                   • gen-abc123  ──►  msg_01px…
-                   • strips Anthropic-only `diagnostics` from requests
-```
-
-- **Per project.** Only `<project>/.claude/settings.local.json` is touched. Your other projects and sessions stay on the subscription.
-- **Both directions, live.** Claude Code re-reads settings mid-session, so switching applies to your very next message.
-- **The proxy is local.** Binds to `127.0.0.1` only. Your API key passes through in the header exactly as sent — never logged, stored, or inspected.
-- **Self-healing.** A project pins an exact proxy port, which is empty after a reboot. A `SessionStart` hook runs `ccswitch heal`, which restarts the proxy (or repoints the project if the port was taken) before you notice. It is a silent no-op for projects on the subscription. Remove it with `ccswitch uninstall-hook`.
-- **Never silently degraded.** If Bun or the proxy is unavailable, ccswitch says so and warns that switching back will need `ccswitch fix`.
-- **`ANTHROPIC_API_KEY` is blanked** while on another provider, so a stray key in your environment can't cause surprise Anthropic API billing.
-- **Every settings change is backed up** to `~/.ccswitch-backups/<project>/`.
-
-### Why the id rewrite is safe
-
-Ids are mapped deterministically (`sha1(original)` → `msg_01px…`), so the same upstream id always yields the same value across retries. The field is used only for prompt-cache diagnostics — it never affects your conversation. The original request id is preserved in the transcript's `requestId`.
-
----
-
-## Adding a provider
-
-Any Anthropic-compatible endpoint works. Add it to [`src/providers.ts`](src/providers.ts):
-
-```ts
-myprovider: {
-  id: "myprovider",
-  label: "My Provider",
-  baseUrl: "https://api.example.com/anthropic",
-  keyEnv: "MYPROVIDER_API_KEY",
-  keysUrl: "https://example.com/keys",
-  modelsUrl: "https://example.com/models",
-},
-```
-
-PRs welcome.
-
----
-
-## Files it touches
-
-| Path | What |
+| | |
 |---|---|
-| `<project>/.claude/settings.local.json` | the provider override (per project) |
-| `~/.ccswitch.json` | favorites, last-used model, proxy port |
-| `~/.ccswitch-backups/` | timestamped settings backups |
-| `~/.ccswitch.log` | proxy log |
-| `~/.claude/commands/switch.md` | the `/switch` command (opt-in) |
-| `~/.claude/settings.json` | one `SessionStart` hook (opt-in, backed up first) |
-
-Nothing else. Your Claude credentials are never read or modified.
-
----
-
-## Development
-
-```bash
-bun install
-bun test          # 86 tests
-bun run typecheck
-bun src/cli.ts    # run locally
-```
+| [How it works](docs/how-it-works.md) | the message ID problem, the proxy, what gets written where |
+| [Adding a provider](docs/providers.md) | any Anthropic compatible endpoint, in about seven lines |
+| [Troubleshooting](docs/troubleshooting.md) | broken sessions, `ccswitch fix`, `ccswitch heal`, common errors |
+| [All commands](docs/cli.md) | the full CLI, for scripting and setup |
 
 ---
 
@@ -193,4 +94,4 @@ bun src/cli.ts    # run locally
 
 Apache-2.0 © [unclecode](https://github.com/unclecode)
 
-Author of [Crawl4AI](https://github.com/unclecode/crawl4ai) (78k★) and other open-source tools.
+Author of [Crawl4AI](https://github.com/unclecode/crawl4ai) (78k stars) and other open source tools.

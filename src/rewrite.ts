@@ -4,8 +4,8 @@
  * Background
  * ----------
  * Claude Code uses Anthropic's cache-diagnosis beta. On each request it sends
- * `diagnostics.previous_message_id` — the `id` of the previous assistant response —
- * and the Anthropic API rejects any value that does not start with `msg_`.
+ * `diagnostics.previous_message_id`, the `id` of the previous assistant response.
+ * The Anthropic API rejects any value that does not start with `msg_`.
  *
  * Third-party Anthropic-compatible endpoints return their own id formats
  * (OpenRouter: `gen-...`). Claude Code persists whatever it receives into the
@@ -25,7 +25,7 @@
 
 import { createHash } from "node:crypto";
 
-/** Prefix marking an id as rewritten by ccswitch — handy when debugging transcripts. */
+/** Prefix marking an id as rewritten by ccswitch, handy when debugging transcripts. */
 export const REWRITE_PREFIX = "msg_01px";
 
 /**
@@ -88,7 +88,7 @@ export function rewriteSSEEvent(raw: string): string {
         return "data: " + JSON.stringify(parsed);
       }
     } catch {
-      // Not JSON we understand — leave the event exactly as it came.
+      // Not JSON we understand, leave the event exactly as it came.
     }
     return whole;
   });

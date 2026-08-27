@@ -48,22 +48,22 @@ export const SEED_FAVORITES = [
   {
     provider: "openrouter",
     id: "z-ai/glm-5.3-flash",
-    note: "GLM-5.3 Flash — fast, 1M context, very cheap",
+    note: "GLM-5.3 Flash, fast, 1M context, very cheap",
   },
   {
     provider: "openrouter",
     id: "moonshotai/kimi-k3",
-    note: "Kimi K3 — strong agentic reasoning",
+    note: "Kimi K3, strong agentic reasoning",
   },
   {
     provider: "openrouter",
     id: "qwen/qwen3.8-flash",
-    note: "Qwen3.8 Flash — cheap and quick",
+    note: "Qwen3.8 Flash, cheap and quick",
   },
   {
     provider: "groq",
     id: "moonshotai/kimi-k2-instruct",
-    note: "Kimi K2 on Groq — very high tokens/sec",
+    note: "Kimi K2 on Groq, very high tokens/sec",
   },
 ];
 

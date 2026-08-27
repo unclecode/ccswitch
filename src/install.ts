@@ -30,7 +30,7 @@ Arguments given: "$ARGUMENTS"
 ## What to do
 
 1. If the arguments are \`back\`, \`max\`, or \`anthropic\` → run \`ccswitch back\`, then
-   \`ccswitch status\`. Tell the user they can keep working in this same session — no
+   \`ccswitch status\`. Tell the user they can keep working in this same session, no
    restart and no repair step is needed, because ccswitch's proxy keeps the transcript
    valid. Mention \`ccswitch back --clean\` as an optional later tidy-up when no session
    is running in this project.
@@ -44,7 +44,7 @@ Arguments given: "$ARGUMENTS"
    Claude subscription. Then act on the choice as above.
 
 After switching to another provider, always remind the user to run \`/model\` and select
-that model — otherwise the session keeps using its current model at the new provider's
+that model, otherwise the session keeps using its current model at the new provider's
 price.
 `;
 

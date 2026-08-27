@@ -2,8 +2,8 @@
  * ccswitch state and Claude Code settings manipulation.
  *
  * Two files matter:
- *  - ~/.ccswitch.json                     — favorites + last used (global, ours)
- *  - <project>/.claude/settings.local.json — the provider override (per project,
+ *  - ~/.ccswitch.json                    , favorites + last used (global, ours)
+ *  - <project>/.claude/settings.local.json, the provider override (per project,
  *                                            Claude Code's own file)
  *
  * The per-project scope is deliberate: switching a project to a cheap model must
@@ -31,7 +31,7 @@ export const OVERRIDE_KEYS = [
   "ANTHROPIC_SMALL_FAST_MODEL",
 ] as const;
 
-/** Model slots — all pointed at the chosen model so any slot resolves correctly. */
+/** Model slots, all pointed at the chosen model so any slot resolves correctly. */
 const MODEL_KEYS = OVERRIDE_KEYS.slice(3);
 
 export interface Favorite {

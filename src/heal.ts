@@ -6,7 +6,7 @@
  * the project would fail with a connection error until someone noticed.
  *
  * `ccswitch heal` fixes that silently. It is wired to Claude Code's SessionStart
- * hook by `ccswitch install`, so opening a session anywhere is enough — the user
+ * hook by `ccswitch install`, so opening a session anywhere is enough, the user
  * never runs or supervises a service.
  */
 
@@ -117,7 +117,7 @@ export async function heal(root: string = projectRoot()): Promise<HealResult> {
 
     const changedPort = port !== pinnedPort;
     if (changedPort) {
-      // The original port is taken by something else — repoint the project.
+      // The original port is taken by something else, repoint the project.
       applyProvider({
         baseUrl: `http://127.0.0.1:${port}`,
         token,

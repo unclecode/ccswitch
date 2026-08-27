@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * ccswitch — switch a project between your Claude subscription and any
+ * ccswitch, switch a project between your Claude subscription and any
  * Anthropic-compatible provider, mid-session, in both directions.
  *
  * Author: unclecode (https://github.com/unclecode)
@@ -80,7 +80,7 @@ async function ensureProxy(
     const info = await proxyInfo(port);
 
     if (info) {
-      // Ours already — reuse it only if it targets the same provider.
+      // Ours already, reuse it only if it targets the same provider.
       if (info.upstream.replace(/\/$/, "") === upstream.replace(/\/$/, "")) return port;
       continue; // ours, but for another provider: leave it alone
     }
@@ -176,7 +176,7 @@ function cmdBack(state: State, clean: boolean): void {
   console.log(`  ${c.dim("project:")} ${projectRoot()}`);
   if (backup) console.log(`  ${c.dim("backup: ")} ${backup}`);
   console.log();
-  console.log(`  ${c.dim("Keep working in the same session — no restart, no repair needed.")}`);
+  console.log(`  ${c.dim("Keep working in the same session, no restart, no repair needed.")}`);
 }
 
 async function cmdStatus(state: State): Promise<void> {
@@ -196,7 +196,7 @@ async function cmdStatus(state: State): Promise<void> {
       const up = await proxyHealthy(port);
       console.log(
         `${c.dim("proxy:  ")} ` +
-          (up ? c.green("running") : c.red("NOT RUNNING — re-run `ccswitch use` to restart it")),
+          (up ? c.green("running") : c.red("NOT RUNNING, re-run `ccswitch use` to restart it")),
       );
     }
   }
@@ -204,7 +204,7 @@ async function cmdStatus(state: State): Promise<void> {
 
 function printFavorites(state: State): void {
   if (state.favorites.length === 0) {
-    console.log(c.dim("no favorites yet — add one with: ccswitch add <provider>:<model> [note]"));
+    console.log(c.dim("no favorites yet, add one with: ccswitch add <provider>:<model> [note]"));
     return;
   }
   const width = Math.max(...state.favorites.map((f) => f.id.length));
@@ -274,7 +274,7 @@ function cmdAdd(ref: string | undefined, note: string, state: State): void {
 function cmdRemove(ref: string | undefined, state: State): void {
   if (!ref) die("usage: ccswitch remove <model>");
 
-  // An unprefixed id should remove the obvious match regardless of provider —
+  // An unprefixed id should remove the obvious match regardless of provider -
   // requiring the prefix only to delete something is needless friction.
   const explicit = ref.includes(":");
   const { provider, model } = parseModelRef(ref, state.last?.provider);
@@ -286,7 +286,7 @@ function cmdRemove(ref: string | undefined, state: State): void {
   if (matches.length === 0) die(`'${model}' is not in your favorites`);
   if (matches.length > 1) {
     const options = matches.map((f) => `${f.provider}:${f.id}`).join(", ");
-    die(`'${model}' matches several favorites — be specific: ${options}`);
+    die(`'${model}' matches several favorites, be specific: ${options}`);
   }
 
   const target = matches[0]!;
@@ -312,7 +312,7 @@ function cmdFix(sessionId: string | undefined, dryRun: boolean): void {
 
   const result = fixTranscript(path, dryRun);
   if (result.patched === 0) {
-    console.log(`${c.green("clean")} — no foreign ids in this transcript`);
+    console.log(`${c.green("clean")}, no foreign ids in this transcript`);
     return;
   }
   console.log(
@@ -322,10 +322,10 @@ function cmdFix(sessionId: string | undefined, dryRun: boolean): void {
     console.log(`  ${c.dim(from)} → ${to}`);
   }
   if (dryRun) {
-    console.log(c.yellow("dry run — nothing written"));
+    console.log(c.yellow("dry run, nothing written"));
   } else {
     console.log(`${c.dim("backup:")} ${result.backup}`);
-    console.log(c.green("patched") + " — resume the session and it will work");
+    console.log(c.green("patched") + ", resume the session and it will work");
   }
 }
 
@@ -359,17 +359,17 @@ async function cmdInstall(state: State): Promise<void> {
   }
   console.log();
 
-  // 2. Slash command — default yes
+  // 2. Slash command, default yes
   if (await confirm("Add the /switch slash command to Claude Code?", true)) {
     installSlashCommand();
     console.log(`  ${c.green("✓")} ${slashCommandPath()}`);
     console.log(`  ${c.dim("use it inside Claude Code as: /switch")}`);
   } else {
-    console.log(c.dim("  skipped — add it later with: ccswitch install-command"));
+    console.log(c.dim("  skipped, add it later with: ccswitch install-command"));
   }
   console.log();
 
-  // 3. Self-healing hook — default yes
+  // 3. Self-healing hook, default yes
   if (hookInstalled()) {
     console.log(`  ${c.green("✓")} auto-restart hook already installed`);
   } else if (
@@ -379,7 +379,7 @@ async function cmdInstall(state: State): Promise<void> {
     console.log(`  ${c.green("✓")} SessionStart hook added to ~/.claude/settings.json`);
     console.log(`  ${c.dim("keeps switched projects working after a reboot, with nothing to run")}`);
   } else {
-    console.log(c.dim("  skipped — after a reboot, run `ccswitch heal` in a switched project"));
+    console.log(c.dim("  skipped, after a reboot, run `ccswitch heal` in a switched project"));
   }
   console.log();
 
@@ -417,7 +417,7 @@ async function cmdHeal(quiet: boolean): Promise<void> {
 }
 
 function usage(): void {
-  console.log(`${c.bold("ccswitch")} ${c.dim(`v${VERSION}`)} — switch Claude Code between your subscription and any provider
+  console.log(`${c.bold("ccswitch")} ${c.dim(`v${VERSION}`)}, switch Claude Code between your subscription and any provider
 
 ${c.bold("USAGE")}
   ccswitch                       interactive picker

@@ -45,7 +45,7 @@ export function startProxy(opts: ProxyOptions) {
             if (stripDiagnostics(parsed)) log("  [req] stripped diagnostics");
             body = JSON.stringify(parsed);
           } catch {
-            body = raw; // not JSON — pass through verbatim
+            body = raw; // not JSON, pass through verbatim
           }
         }
       }
